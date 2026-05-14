@@ -84,5 +84,23 @@ export type RouteDef<
   ) => Promise<ResponseFor<TResponses>> | ResponseFor<TResponses>;
 };
 
-/** A route definition with all generics erased — used in registries and OpenAPI generation. */
-export type AnyRouteDef = RouteDef<any, any, any, ResponseMap, any>;
+/** Metadata-only shape — no handler, no generics. Safe for OpenAPI generation and registries. */
+export type RouteDefMeta = {
+  method: HttpMethod;
+  path: string;
+  summary?: string;
+  description?: string;
+  tags?: readonly string[];
+  params?: ZodType;
+  query?: ZodType;
+  body?: ZodType;
+  responses: ResponseMap;
+};
+
+/** A route definition with all generics erased — used where the handler must be invoked at runtime. */
+export type AnyRouteDef = RouteDefMeta & {
+  // biome-ignore lint/suspicious/noExplicitAny: intentional type erasure for heterogeneous route collections
+  middleware?: Middleware<{}, any>;
+  // biome-ignore lint/suspicious/noExplicitAny: intentional type erasure for heterogeneous route collections
+  handler: (ctx: any) => any;
+};

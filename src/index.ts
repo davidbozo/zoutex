@@ -22,4 +22,5 @@ export type {
   ResponseFor,
   ResponseMap,
   RouteDef,
+  RouteDefMeta,
 } from "./types.js";

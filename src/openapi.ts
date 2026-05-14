@@ -1,5 +1,5 @@
 import { type ZodType, z } from "zod";
-import type { AnyRouteDef, ResponseMap } from "./types.js";
+import type { ResponseMap, RouteDefMeta } from "./types.js";
 
 export type OpenAPIInfo = {
   title: string;
@@ -29,7 +29,7 @@ export type GenerateOptions = {
  * Uses Zod's built-in `z.toJSONSchema()` for schema conversion (requires Zod 3.25+).
  */
 export function generateOpenAPI(
-  routes: AnyRouteDef[],
+  routes: RouteDefMeta[],
   options: GenerateOptions,
 ): Record<string, unknown> {
   const paths: Record<string, Record<string, unknown>> = {};
@@ -64,7 +64,7 @@ function normalizePath(path: string): string {
   return path.replace(/\[(\.\.\.)?(\w+)\]/g, "{$2}");
 }
 
-function buildParameters(route: AnyRouteDef): unknown[] | undefined {
+function buildParameters(route: RouteDefMeta): unknown[] | undefined {
   const parameters: unknown[] = [];
 
   if (route.params) {
@@ -205,14 +205,14 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): T {
  * for its side effect, or push routes explicitly.
  */
 export class RouteRegistry {
-  private routes: AnyRouteDef[] = [];
+  private routes: RouteDefMeta[] = [];
 
-  add(...routes: AnyRouteDef[]): this {
+  add(...routes: RouteDefMeta[]): this {
     this.routes.push(...routes);
     return this;
   }
 
-  list(): readonly AnyRouteDef[] {
+  list(): readonly RouteDefMeta[] {
     return this.routes;
   }
 
