@@ -1,0 +1,49 @@
+{
+  "name": "zoutex",
+  "version": "0.1.0",
+  "description": "Type-safe routes for Next.js App Router, powered by Zod. Define once, get types, runtime validation, and OpenAPI.",
+  "keywords": [
+    "nextjs",
+    "app-router",
+    "zod",
+    "openapi",
+    "type-safe",
+    "api",
+    "routes"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./next": {
+      "types": "./dist/next.d.ts",
+      "import": "./dist/next.js"
+    },
+    "./openapi": {
+      "types": "./dist/openapi.d.ts",
+      "import": "./dist/openapi.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "next": ">=14",
+    "zod": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "next": "^14.0.0",
+    "tsx": "^4.22.0",
+    "typescript": "^5.4.0",
+    "zod": "^4.4.3"
+  }
+}
