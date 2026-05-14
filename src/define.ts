@@ -51,7 +51,12 @@ export function defineRoute<
   responses: TResponses;
   middleware?: Middleware<{}, TExtension>;
   handler: (
-    ctx: HandlerContext<z.infer<TParams>, z.infer<TQuery>, z.infer<TBody>, TExtension>,
+    ctx: HandlerContext<
+      z.infer<TParams>,
+      z.infer<TQuery>,
+      z.infer<TBody>,
+      TExtension
+    >,
   ) => Promise<ResponseFor<TResponses>> | ResponseFor<TResponses>;
 }): RouteDef<TParams, TQuery, TBody, TResponses, TExtension> {
   return def as RouteDef<TParams, TQuery, TBody, TResponses, TExtension>;

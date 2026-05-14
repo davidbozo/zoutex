@@ -3,7 +3,7 @@
  * against a small set of routes. Run with `npx tsx src/runtime.test.ts`.
  */
 import { z } from "zod";
-import { defineRoute, ok, notFound, badRequest } from "./index.js";
+import { badRequest, defineRoute, notFound, ok } from "./index.js";
 import { toNextHandler } from "./next.js";
 import { generateOpenAPI, RouteRegistry } from "./openapi.js";
 
@@ -22,7 +22,8 @@ const getUserRoute = defineRoute({
     404: ErrorSchema,
   },
   async handler({ params }) {
-    if (params.id === "missing") return notFound({ message: `user ${params.id} not found` });
+    if (params.id === "missing")
+      return notFound({ message: `user ${params.id} not found` });
     return ok({ id: params.id, name: "Alice" });
   },
 });
@@ -57,8 +58,13 @@ async function testNextAdapter() {
 
   // Test 2: 404 path
   const missingReq = new Request("http://localhost/users/missing");
-  const missingRes = await getHandler(missingReq, { params: { id: "missing" } });
-  console.log(`GET /users/missing  →  ${missingRes.status}`, await missingRes.json());
+  const missingRes = await getHandler(missingReq, {
+    params: { id: "missing" },
+  });
+  console.log(
+    `GET /users/missing  →  ${missingRes.status}`,
+    await missingRes.json(),
+  );
 
   // Test 3: validation failure on POST
   const postHandler = toNextHandler(createUserRoute);
@@ -67,7 +73,10 @@ async function testNextAdapter() {
     body: JSON.stringify({ name: 123 }),
   });
   const badRes = await postHandler(badReq, { params: {} });
-  console.log(`POST /users (invalid body)  →  ${badRes.status}`, await badRes.json());
+  console.log(
+    `POST /users (invalid body)  →  ${badRes.status}`,
+    await badRes.json(),
+  );
 
   // Test 4: successful POST
   const goodReq = new Request("http://localhost/users", {
@@ -75,7 +84,10 @@ async function testNextAdapter() {
     body: JSON.stringify({ name: "Bob" }),
   });
   const goodRes = await postHandler(goodReq, { params: {} });
-  console.log(`POST /users (valid)  →  ${goodRes.status}`, await goodRes.json());
+  console.log(
+    `POST /users (valid)  →  ${goodRes.status}`,
+    await goodRes.json(),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

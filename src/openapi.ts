@@ -1,4 +1,4 @@
-import { z, type ZodType } from "zod";
+import { type ZodType, z } from "zod";
 import type { AnyRouteDef, ResponseMap } from "./types.js";
 
 export type OpenAPIInfo = {
@@ -94,8 +94,10 @@ function extractObjectFields(
     return [];
   }
 
-  const properties = (jsonSchema as { properties?: Record<string, unknown> }).properties ?? {};
-  const required = ((jsonSchema as { required?: string[] }).required ?? []) as string[];
+  const properties =
+    (jsonSchema as { properties?: Record<string, unknown> }).properties ?? {};
+  const required = ((jsonSchema as { required?: string[] }).required ??
+    []) as string[];
 
   return Object.entries(properties).map(([name, propSchema]) => ({
     name,
@@ -146,7 +148,9 @@ function isVoidSchema(jsonSchema: unknown): boolean {
   if (typeof jsonSchema !== "object" || jsonSchema === null) return false;
   const s = jsonSchema as { type?: unknown; not?: unknown };
   // Zod's z.void() becomes either `{ not: {} }` or similar; be permissive
-  return s.type === "null" || (s.not !== undefined && Object.keys(s).length === 1);
+  return (
+    s.type === "null" || (s.not !== undefined && Object.keys(s).length === 1)
+  );
 }
 
 function descriptionForStatus(status: number): string {
@@ -172,7 +176,8 @@ function descriptionForStatus(status: number): string {
  * (Zod 3.25+); throws a helpful error if not.
  */
 function zodToJsonSchema(schema: ZodType): unknown {
-  const fn = (z as unknown as { toJSONSchema?: (s: ZodType) => unknown }).toJSONSchema;
+  const fn = (z as unknown as { toJSONSchema?: (s: ZodType) => unknown })
+    .toJSONSchema;
   if (typeof fn !== "function") {
     throw new Error(
       "[zoutex] z.toJSONSchema is not available. Upgrade to Zod 3.25+ or install @zod/to-json-schema.",

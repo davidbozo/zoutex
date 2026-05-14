@@ -20,25 +20,29 @@ export type ResponseFor<R extends ResponseMap> = {
     : never;
 }[keyof R];
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
+export type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "OPTIONS"
+  | "HEAD";
 
 /**
  * Context passed to a middleware function. Returns a context extension
  * that will be merged into the handler's `ctx`.
  */
-export type Middleware<TContext = {}, TExtension = {}> = (ctx: {
-  req: Request;
-} & TContext) => Promise<TExtension> | TExtension;
+export type Middleware<TContext = {}, TExtension = {}> = (
+  ctx: {
+    req: Request;
+  } & TContext,
+) => Promise<TExtension> | TExtension;
 
 /**
  * The context object passed to a route handler.
  */
-export type HandlerContext<
-  TParams,
-  TQuery,
-  TBody,
-  TExtension,
-> = {
+export type HandlerContext<TParams, TQuery, TBody, TExtension> = {
   params: TParams;
   query: TQuery;
   body: TBody;
@@ -71,7 +75,12 @@ export type RouteDef<
   responses: TResponses;
   middleware?: Middleware<{}, TExtension>;
   handler: (
-    ctx: HandlerContext<z.infer<TParams>, z.infer<TQuery>, z.infer<TBody>, TExtension>,
+    ctx: HandlerContext<
+      z.infer<TParams>,
+      z.infer<TQuery>,
+      z.infer<TBody>,
+      TExtension
+    >,
   ) => Promise<ResponseFor<TResponses>> | ResponseFor<TResponses>;
 };
 

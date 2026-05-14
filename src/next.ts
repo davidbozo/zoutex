@@ -1,10 +1,12 @@
 import { ZodError } from "zod";
-import type { AnyRouteDef, RouteDef } from "./types.js";
 import { ResponseShapeError, ValidationError, ZouteXError } from "./errors.js";
+import type { AnyRouteDef, RouteDef } from "./types.js";
 
 export type NextRouteContext = {
   /** In Next.js 15+, params is a Promise. Older versions pass an object. We accept both. */
-  params: Promise<Record<string, string | string[]>> | Record<string, string | string[]>;
+  params:
+    | Promise<Record<string, string | string[]>>
+    | Record<string, string | string[]>;
 };
 
 export type AdapterOptions = {
@@ -55,7 +57,9 @@ export function toNextHandler(
         ? safeParse(route.query, queryObj, "query")
         : ({} as Record<string, unknown>);
 
-      const body = route.body ? await parseBody(req, route.body) : (undefined as unknown);
+      const body = route.body
+        ? await parseBody(req, route.body)
+        : (undefined as unknown);
 
       // 3. Run middleware to build context extension
       const extension = route.middleware ? await route.middleware({ req }) : {};
@@ -71,11 +75,15 @@ export function toNextHandler(
 
       // 5. Optionally validate the response shape against the declared schema
       if (shouldValidateResponse) {
-        const responseSchema = route.responses[result.status as unknown as number];
+        const responseSchema =
+          route.responses[result.status as unknown as number];
         if (responseSchema && result.body !== undefined) {
           const parsed = responseSchema.safeParse(result.body);
           if (!parsed.success) {
-            throw new ResponseShapeError(result.status as unknown as number, parsed.error.issues);
+            throw new ResponseShapeError(
+              result.status as unknown as number,
+              parsed.error.issues,
+            );
           }
         }
       }
@@ -100,7 +108,11 @@ export function toNextHandler(
   };
 }
 
-function safeParse(schema: { safeParse: (data: unknown) => any }, data: unknown, source: "params" | "query" | "body") {
+function safeParse(
+  schema: { safeParse: (data: unknown) => any },
+  data: unknown,
+  source: "params" | "query" | "body",
+) {
   const result = schema.safeParse(data);
   if (!result.success) {
     throw new ValidationError(source, result.error.issues);
@@ -108,7 +120,10 @@ function safeParse(schema: { safeParse: (data: unknown) => any }, data: unknown,
   return result.data;
 }
 
-async function parseBody(req: Request, schema: { safeParse: (data: unknown) => any }) {
+async function parseBody(
+  req: Request,
+  schema: { safeParse: (data: unknown) => any },
+) {
   let json: unknown;
   try {
     json = await req.json();
@@ -156,10 +171,14 @@ function defaultErrorHandler(error: unknown): Response {
 export function toNextHandlers<T extends Partial<Record<string, AnyRouteDef>>>(
   routes: T,
   options?: AdapterOptions,
-): { [K in keyof T]: (req: Request, ctx: NextRouteContext) => Promise<Response> } {
+): {
+  [K in keyof T]: (req: Request, ctx: NextRouteContext) => Promise<Response>;
+} {
   const out: Record<string, unknown> = {};
   for (const [method, route] of Object.entries(routes)) {
     if (route) out[method] = toNextHandler(route, options);
   }
-  return out as { [K in keyof T]: (req: Request, ctx: NextRouteContext) => Promise<Response> };
+  return out as {
+    [K in keyof T]: (req: Request, ctx: NextRouteContext) => Promise<Response>;
+  };
 }

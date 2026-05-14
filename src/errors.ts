@@ -30,10 +30,17 @@ export class ValidationError extends ZouteXError {
 
 /** Thrown when a handler returns a response that doesn't match the declared schema. */
 export class ResponseShapeError extends ZouteXError {
-  constructor(status: number, public readonly issues: unknown) {
-    super(`Response body for status ${status} did not match declared schema`, 500, {
-      message: "Internal response shape error",
-    });
+  constructor(
+    status: number,
+    public readonly issues: unknown,
+  ) {
+    super(
+      `Response body for status ${status} did not match declared schema`,
+      500,
+      {
+        message: "Internal response shape error",
+      },
+    );
     this.name = "ResponseShapeError";
   }
 }

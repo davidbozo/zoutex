@@ -6,7 +6,7 @@
  * if they stop being errors, TypeScript fails the build.
  */
 import { z } from "zod";
-import { defineRoute, ok, notFound, badRequest } from "./index.js";
+import { badRequest, defineRoute, notFound, ok } from "./index.js";
 
 const UserSchema = z.object({ id: z.string(), name: z.string() });
 const ErrorSchema = z.object({ message: z.string() });
@@ -25,7 +25,8 @@ defineRoute({
   },
   async handler({ params }) {
     if (!params.id) return { status: 400, body: { message: "id required" } };
-    if (params.id === "missing") return { status: 404, body: { message: "not found" } };
+    if (params.id === "missing")
+      return { status: 404, body: { message: "not found" } };
     return { status: 200, body: { id: params.id, name: "Alice" } };
   },
 });
@@ -118,9 +119,8 @@ defineRoute({
     404: ErrorSchema,
   },
   async handler({ params }) {
-    if (params.id === "missing") return { status: 404, body: { message: "not found" } };
+    if (params.id === "missing")
+      return { status: 404, body: { message: "not found" } };
     return { status: 204 }; // no body required
   },
 });
-
-export {};
