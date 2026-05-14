@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { badRequest, defineRoute, notFound, ok } from "./index.js";
 import { toNextHandler } from "./next.js";
-import { generateOpenAPI, RouteRegistry } from "./openapi.js";
+import { RouteRegistry } from "./openapi.js";
 
 const UserSchema = z.object({ id: z.string(), name: z.string() });
 const ErrorSchema = z.object({ message: z.string() });
