@@ -20,6 +20,19 @@ async function runCli(root: string): Promise<CliResult> {
   }
 }
 
+// shell: true is required on Windows where npm link creates a .cmd shim
+async function runCliByName(root: string): Promise<CliResult> {
+  try {
+    const { stdout } = await execFileAsync("zoutex", ["discover", "--root", root], {
+      shell: true,
+    });
+    return { stdout, exitCode: 0 };
+  } catch (err: unknown) {
+    const e = err as { stdout: string; code: number };
+    return { stdout: e.stdout ?? "", exitCode: e.code ?? 1 };
+  }
+}
+
 describe("discover", () => {
   let result: CliResult;
 
@@ -60,4 +73,11 @@ describe("discover", () => {
     expect(healthLine).toBeDefined();
     expect(healthLine).toContain("plain");
   });
+});
+
+test("zoutex binary is invokable by name (requires npm link)", async () => {
+  const r = await runCliByName(PLAYGROUND_ROOT);
+  expect(r.exitCode).toBe(1);
+  expect(r.stdout).toContain("/api/tags");
+  expect(r.stdout).toContain("DELETE");
 });
