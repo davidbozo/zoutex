@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { conflict, created, defineRoute, ok } from "zoutex";
 import { toNextHandlers } from "zoutex/next";
-import { ErrorSchema, UserSchema } from "../../../../tests/lib/schemas";
-import { users } from "../../../../tests/lib/store";
+import { ErrorSchema, UserSchema } from "@/lib/schemas";
+import { users } from "@/lib/store";
 
 export const routeDefs = [
   defineRoute({
@@ -26,7 +26,7 @@ export const routeDefs = [
     tags: ["users"],
     body: z.object({
       name: z.string().min(1).max(100),
-      email: z.string().email(),
+      email: z.email(),
     }),
     responses: { 201: UserSchema, 409: ErrorSchema },
     async handler({ body }) {

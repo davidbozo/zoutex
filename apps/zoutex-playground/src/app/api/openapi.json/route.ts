@@ -1,5 +1,5 @@
-import { ErrorSchema } from "../../../../tests/lib/schemas";
-import { registry } from "../../../../tests/lib/registry";
+import { registry } from "@/lib/registry";
+import { ErrorSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 

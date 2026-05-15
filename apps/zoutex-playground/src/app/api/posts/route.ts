@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { defineRoute, ok } from "zoutex";
 import { toNextHandlers } from "zoutex/next";
-import { PostSchema } from "../../../../tests/lib/schemas";
-import { posts } from "../../../../tests/lib/store";
+import { PostSchema } from "@/lib/schemas";
+import { posts } from "@/lib/store";
 
 export const routeDefs = [
   defineRoute({

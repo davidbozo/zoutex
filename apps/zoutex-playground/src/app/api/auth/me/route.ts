@@ -1,6 +1,6 @@
 import { defineRoute, ok, ZouteXError } from "zoutex";
 import { toNextHandlers } from "zoutex/next";
-import { ErrorSchema, UserSchema } from "../../../../../tests/lib/schemas";
+import { ErrorSchema, UserSchema } from "@/lib/schemas";
 
 export const routeDefs = [
   defineRoute({

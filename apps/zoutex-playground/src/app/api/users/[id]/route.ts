@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { defineRoute, noContent, notFound, ok } from "zoutex";
 import { toNextHandlers } from "zoutex/next";
-import { ErrorSchema, UserSchema } from "../../../../../tests/lib/schemas";
-import { users } from "../../../../../tests/lib/store";
+import { ErrorSchema, UserSchema } from "@/lib/schemas";
+import { users } from "@/lib/store";
 
 const idParams = z.object({ id: z.string() });
 
@@ -28,7 +28,7 @@ export const routeDefs = [
     params: idParams,
     body: z.object({
       name: z.string().min(1).max(100).optional(),
-      email: z.string().email().optional(),
+      email: z.email().optional(),
     }),
     responses: { 200: UserSchema, 404: ErrorSchema },
     async handler({ params, body }) {
