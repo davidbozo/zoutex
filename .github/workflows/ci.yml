@@ -33,4 +33,10 @@ jobs:
         run: npm -w apps/zoutex-playground run build
 
       - name: Run integration tests
-        run: npm -w apps/zoutex-playground run test
+        run: npm -w apps/zoutex-playground run test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
+
+      - name: Publish test results
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: apps/zoutex-playground/test-results.xml
