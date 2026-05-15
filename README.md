@@ -18,37 +18,34 @@ ZouteX collapses these into a single, type-checked declaration. The handler can 
 ## Quick start
 
 ```ts
-// app/api/users/[id]/route.def.ts
+// app/api/users/[id]/route.ts
 import { z } from "zod";
 import { defineRoute, ok, notFound } from "zoutex";
+import { toNextHandlers } from "zoutex/next";
 
 const UserSchema = z.object({ id: z.string(), name: z.string() });
 const ErrorSchema = z.object({ message: z.string() });
 
-export const getUserRoute = defineRoute({
-  method: "GET",
-  path: "/users/[id]",
-  summary: "Get a user by id",
-  tags: ["users"],
-  params: z.object({ id: z.string() }),
-  responses: {
-    200: UserSchema,
-    404: ErrorSchema,
-  },
-  async handler({ params }) {
-    const user = await db.users.find(params.id);
-    if (!user) return notFound({ message: `user ${params.id} not found` });
-    return ok(user);
-  },
-});
-```
+export const routeDefs = [
+  defineRoute({
+    method: "GET",
+    path: "/api/users/[id]",
+    summary: "Get a user by id",
+    tags: ["users"],
+    params: z.object({ id: z.string() }),
+    responses: {
+      200: UserSchema,
+      404: ErrorSchema,
+    },
+    async handler({ params }) {
+      const user = await db.users.find(params.id);
+      if (!user) return notFound({ message: `user ${params.id} not found` });
+      return ok(user);
+    },
+  }),
+] as const;
 
-```ts
-// app/api/users/[id]/route.ts
-import { toNextHandler } from "zoutex/next";
-import { getUserRoute } from "./route.def";
-
-export const GET = toNextHandler(getUserRoute);
+export const { GET } = toNextHandlers(routeDefs);
 ```
 
 That's it. You now have:
@@ -106,58 +103,67 @@ These are typed such that using a helper for an undeclared status fails to compi
 Middleware extends the handler context with typed values:
 
 ```ts
-const authedRoute = defineRoute({
-  method: "GET",
-  path: "/me",
-  middleware: async ({ req }) => {
-    const user = await verifyToken(req.headers.get("authorization"));
-    return { user }; // typed as { user: User }
-  },
-  responses: { 200: UserSchema, 401: ErrorSchema },
-  async handler({ user }) {
-    // `user` is fully typed here
-    return ok(user);
-  },
-});
+export const routeDefs = [
+  defineRoute({
+    method: "GET",
+    path: "/api/me",
+    middleware: async ({ req }) => {
+      const user = await verifyToken(req.headers.get("authorization"));
+      return { user }; // typed as { user: User }
+    },
+    responses: { 200: UserSchema, 401: ErrorSchema },
+    async handler({ user }) {
+      // `user` is fully typed here
+      return ok(user);
+    },
+  }),
+] as const;
+
+export const { GET } = toNextHandlers(routeDefs);
 ```
 
 ## OpenAPI generation
 
-Collect routes into a registry, then emit a spec:
+Import the `routeDefs` arrays from your route files, spread them into a `RouteRegistry`, then call `toOpenAPI`:
 
 ```ts
-// scripts/generate-openapi.ts
+// lib/registry.ts
 import { RouteRegistry } from "zoutex/openapi";
-import { getUserRoute, createUserRoute } from "@/app/api/...";
+import { routeDefs as usersRouteDefs } from "@/app/api/users/route";
+import { routeDefs as userIdRouteDefs } from "@/app/api/users/[id]/route";
 
-const registry = new RouteRegistry();
-registry.add(getUserRoute, createUserRoute);
-
-const spec = registry.toOpenAPI({
-  info: { title: "My API", version: "1.0.0" },
-  servers: [{ url: "https://api.example.com" }],
-});
-
-await fs.writeFile("openapi.json", JSON.stringify(spec, null, 2));
+export const registry = new RouteRegistry();
+registry.add(...usersRouteDefs, ...userIdRouteDefs);
 ```
 
-ZouteX uses Zod 4's built-in `z.toJSONSchema()` — no extra dependencies, no schema drift.
+Serve the spec from an API route, or write it to disk:
+
+```ts
+// app/api/openapi.json/route.ts
+import { registry } from "@/lib/registry";
+import { ErrorSchema } from "@/lib/schemas";
+
+export const dynamic = "force-dynamic";
+
+export function GET() {
+  const spec = registry.toOpenAPI({
+    info: { title: "My API", version: "1.0.0" },
+    servers: [{ url: "https://api.example.com" }],
+    defaultResponses: { 400: ErrorSchema, 500: ErrorSchema },
+  });
+  return new Response(JSON.stringify(spec, null, 2), {
+    headers: { "content-type": "application/json" },
+  });
+}
+```
+
+`defaultResponses` injects shared error schemas into every operation — useful for validation errors or unexpected failures you don't want to repeat per route.
+
+ZouteX uses [`zod-openapi`](https://github.com/samchungy/zod-openapi) to convert Zod schemas to OpenAPI 3.1. The same schemas that drive runtime validation produce the spec — no drift.
 
 ## Multiple methods per route
 
-For `route.ts` files that handle multiple methods:
-
-```ts
-// app/api/users/[id]/route.ts
-import { toNextHandlers } from "zoutex/next";
-import { getUserRoute, updateUserRoute, deleteUserRoute } from "./route.def";
-
-export const { GET, PUT, DELETE } = toNextHandlers({
-  GET: getUserRoute,
-  PUT: updateUserRoute,
-  DELETE: deleteUserRoute,
-});
-```
+Add more `defineRoute` calls to the same array. `toNextHandlers` dispatches by the `method` field on each definition, so there is no separate API for multi-method files — the pattern is identical to the quick start example above, just with more entries in `routeDefs`.
 
 ## Configuration
 
