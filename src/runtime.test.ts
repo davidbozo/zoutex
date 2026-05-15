@@ -3,9 +3,9 @@
  * against a small set of routes. Run with `npx tsx src/runtime.test.ts`.
  */
 import { z } from "zod";
-import { badRequest, defineRoute, notFound, ok } from "./index.js";
-import { toNextHandler } from "./next.js";
-import { RouteRegistry } from "./openapi.js";
+import { badRequest, defineRoute, notFound, ok } from "./index";
+import { toNextHandler } from "./next";
+import { RouteRegistry } from "./openapi";
 
 const UserSchema = z
   .object({ id: z.string(), name: z.string() })

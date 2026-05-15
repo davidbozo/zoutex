@@ -6,7 +6,7 @@ import type {
   ResponseFor,
   ResponseMap,
   RouteDef,
-} from "./types.js";
+} from "./types";
 
 /**
  * Define a type-safe route.

@@ -1,5 +1,5 @@
-export { defineRoute } from "./define.js";
-export { ResponseShapeError, ValidationError, ZouteXError } from "./errors.js";
+export { defineRoute } from "./define";
+export { ResponseShapeError, ValidationError, ZouteXError } from "./errors";
 export {
   accepted,
   badRequest,
@@ -13,7 +13,7 @@ export {
   tooManyRequests,
   unauthorized,
   unprocessable,
-} from "./result.js";
+} from "./result";
 export type {
   AnyRouteDef,
   HandlerContext,
@@ -23,4 +23,4 @@ export type {
   ResponseMap,
   RouteDef,
   RouteDefMeta,
-} from "./types.js";
+} from "./types";

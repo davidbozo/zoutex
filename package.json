@@ -15,16 +15,16 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./next": {
-      "types": "./dist/next.d.ts",
-      "import": "./dist/next.js"
+      "types": "./dist/next.d.mts",
+      "import": "./dist/next.mjs"
     },
     "./openapi": {
-      "types": "./dist/openapi.d.ts",
-      "import": "./dist/openapi.js"
+      "types": "./dist/openapi.d.mts",
+      "import": "./dist/openapi.mjs"
     }
   },
   "files": [
@@ -32,7 +32,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsdown",
     "typecheck": "tsc --noEmit",
     "check": "biome check",
     "fix": "biome check --write",
@@ -47,6 +47,7 @@
     "@biomejs/biome": "^2.4.15",
     "@types/node": "^25.8.0",
     "next": "^14.0.0",
+    "tsdown": "^0.22.0",
     "tsx": "^4.22.0",
     "typescript": "^5.4.0",
     "zod": "^4.4.3"

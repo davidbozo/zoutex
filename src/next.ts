@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
-import { ResponseShapeError, ValidationError, ZouteXError } from "./errors.js";
-import type { AnyRouteDef, RouteDef } from "./types.js";
+import { ResponseShapeError, ValidationError, ZouteXError } from "./errors";
+import type { AnyRouteDef } from "./types";
 
 export type NextRouteContext = {
   /** In Next.js 15+, params is a Promise. Older versions pass an object. We accept both. */

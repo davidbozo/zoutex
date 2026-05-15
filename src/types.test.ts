@@ -6,7 +6,7 @@
  * if they stop being errors, TypeScript fails the build.
  */
 import { z } from "zod";
-import { badRequest, defineRoute, notFound, ok } from "./index.js";
+import { badRequest, defineRoute, notFound, ok } from "./index";
 
 const UserSchema = z.object({ id: z.string(), name: z.string() });
 const ErrorSchema = z.object({ message: z.string() });
