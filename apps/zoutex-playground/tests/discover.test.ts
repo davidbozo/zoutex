@@ -1,12 +1,13 @@
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 const execFileAsync = promisify(execFile);
 
 const CLI = fileURLToPath(new URL("../../../dist/cli.mjs", import.meta.url));
 const PLAYGROUND_ROOT = fileURLToPath(new URL("../", import.meta.url));
+const MONOREPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
 type CliResult = { stdout: string; exitCode: number };
 
@@ -32,6 +33,14 @@ async function runCliByName(root: string): Promise<CliResult> {
     return { stdout: e.stdout ?? "", exitCode: e.code ?? 1 };
   }
 }
+
+beforeAll(async () => {
+  await execFileAsync("npm", ["link"], { cwd: MONOREPO_ROOT, shell: true });
+});
+
+afterAll(async () => {
+  await execFileAsync("npm", ["unlink", "--global", "zoutex"], { shell: true });
+});
 
 describe("discover", () => {
   let result: CliResult;
@@ -75,7 +84,7 @@ describe("discover", () => {
   });
 });
 
-test("zoutex binary is invokable by name (requires npm link)", async () => {
+test("zoutex binary is invokable by name", async () => {
   const r = await runCliByName(PLAYGROUND_ROOT);
   expect(r.exitCode).toBe(1);
   expect(r.stdout).toContain("/api/tags");
