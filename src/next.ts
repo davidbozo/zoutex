@@ -156,29 +156,31 @@ function defaultErrorHandler(error: unknown): Response {
   });
 }
 
-/**
- * Convenience helper: pass an object of HTTP method → RouteDef and get back
- * an object of HTTP method → Next.js handler, ready to spread into route.ts.
- *
- * @example
- * ```ts
- * export const { GET, POST } = toNextHandlers({
- *   GET: getUserRoute,
- *   POST: createUserRoute,
- * });
- * ```
- */
+type NextHandler = (req: Request, ctx: NextRouteContext) => Promise<Response>;
+
+export function toNextHandlers<T extends { method: string }>(
+  routes: readonly T[],
+  options?: AdapterOptions,
+): { [K in T["method"]]: NextHandler };
+
 export function toNextHandlers<T extends Partial<Record<string, AnyRouteDef>>>(
   routes: T,
   options?: AdapterOptions,
-): {
-  [K in keyof T]: (req: Request, ctx: NextRouteContext) => Promise<Response>;
-} {
-  const out: Record<string, unknown> = {};
-  for (const [method, route] of Object.entries(routes)) {
-    if (route) out[method] = toNextHandler(route, options);
+): { [K in keyof T]: NextHandler };
+
+export function toNextHandlers(
+  routes: readonly AnyRouteDef[] | Partial<Record<string, AnyRouteDef>>,
+  options?: AdapterOptions,
+): Record<string, NextHandler> {
+  const out: Record<string, NextHandler> = {};
+  if (Array.isArray(routes)) {
+    for (const route of routes) {
+      out[route.method] = toNextHandler(route, options);
+    }
+  } else {
+    for (const [method, route] of Object.entries(routes)) {
+      if (route) out[method] = toNextHandler(route, options);
+    }
   }
-  return out as {
-    [K in keyof T]: (req: Request, ctx: NextRouteContext) => Promise<Response>;
-  };
+  return out;
 }

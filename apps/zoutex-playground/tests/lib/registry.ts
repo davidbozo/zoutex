@@ -1,16 +1,13 @@
 import { RouteRegistry } from "zoutex/openapi";
-import { listUsersRoute, createUserRoute } from "@/app/api/users/route.def";
-import { getUserRoute, updateUserRoute, deleteUserRoute } from "@/app/api/users/[id]/route.def";
-import { listPostsRoute } from "@/app/api/posts/route.def";
-import { getMeRoute } from "@/app/api/auth/me/route.def";
+import { routeDefs as authMeRouteDefs } from "@/app/api/auth/me/route";
+import { routeDefs as postsRouteDefs } from "@/app/api/posts/route";
+import { routeDefs as userIdRouteDefs } from "@/app/api/users/[id]/route";
+import { routeDefs as usersRouteDefs } from "@/app/api/users/route";
 
 export const registry = new RouteRegistry();
 registry.add(
-  listUsersRoute,
-  createUserRoute,
-  getUserRoute,
-  updateUserRoute,
-  deleteUserRoute,
-  listPostsRoute,
-  getMeRoute,
+  ...usersRouteDefs,
+  ...userIdRouteDefs,
+  ...postsRouteDefs,
+  ...authMeRouteDefs,
 );
