@@ -177,6 +177,41 @@ toNextHandler(route, {
 - Zod 4+
 - TypeScript 5+ (for the `const` generic modifier)
 
+## Development
+
+The repo contains an integration testing playground at `apps/zoutex-playground` — a real Next.js app that exercises every library feature against a live server.
+
+**First-time setup:**
+
+```sh
+npm install
+npm run build                                    # compile library → dist/
+npm -w apps/zoutex-playground run build          # Next.js production build (required before tests)
+```
+
+**Run integration tests:**
+
+```sh
+npm -w apps/zoutex-playground run test
+```
+
+Vitest starts a `next start` server on port 4321, waits for it to be ready, runs all HTTP-level tests, then tears the server down. The library must be built (`npm run build`) before each test run if you changed library source.
+
+**Convenience scripts (build library + run tests in one command):**
+
+```sh
+npm run test:integration    # npm run build && npm -w apps/zoutex-playground run test
+npm run playground          # npm run build && npm -w apps/zoutex-playground run dev
+```
+
+**Other commands:**
+
+```sh
+npm run typecheck           # tsc --noEmit
+npm run check               # Biome lint + format check
+npm run fix                 # Biome auto-fix
+```
+
 ## License
 
 MIT
