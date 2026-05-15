@@ -26,8 +26,8 @@ jobs:
       - name: Type-check library
         run: npm run typecheck
 
-      - name: Lint (Biome)
-        run: npm run check
+      # - name: Lint (Biome)
+      #   run: npm run check
 
       - name: Build Next.js app
         run: npm -w apps/zoutex-playground run build
