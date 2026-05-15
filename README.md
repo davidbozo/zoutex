@@ -1,5 +1,7 @@
 # ZouteX
 
+> **⚠️ Work in progress.** ZouteX is under heavy development. APIs may change without notice and it is not yet suitable for production use.
+
 Type-safe routes for Next.js App Router, powered by **Zod**. Define once — get types, runtime validation, and OpenAPI from a single declaration.
 
 The name is **Z**od + r**out**e + n**ext**, smashed together.
