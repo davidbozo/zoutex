@@ -23,4 +23,5 @@ export const routeDefs = [
   }),
 ] as const;
 
+// Internationally missing DELETE export 
 export const { GET } = toNextHandlers(routeDefs);
