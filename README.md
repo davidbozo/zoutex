@@ -204,6 +204,19 @@ npm run test:integration    # npm run build && npm -w apps/zoutex-playground run
 npm run playground          # npm run build && npm -w apps/zoutex-playground run dev
 ```
 
+**Testing the CLI locally:**
+
+```sh
+npm run build                                    # compile CLI → dist/cli.mjs
+node dist/cli.mjs discover --root apps/zoutex-playground
+```
+
+Run without `--root` to scan the current directory:
+
+```sh
+node dist/cli.mjs discover
+```
+
 **Other commands:**
 
 ```sh
