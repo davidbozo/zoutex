@@ -1,4 +1,14 @@
-import { type ZodType, z } from "zod";
+import { ZodNever, type ZodType, ZodVoid } from "zod";
+import {
+  createDocument,
+  type ZodObjectInput,
+  type ZodOpenApiOperationObject,
+  type ZodOpenApiParameters,
+  type ZodOpenApiPathsObject,
+  type ZodOpenApiRequestBodyObject,
+  type ZodOpenApiResponseObject,
+  type ZodOpenApiResponsesObject,
+} from "zod-openapi";
 import type { ResponseMap, RouteDefMeta } from "./types.js";
 
 export type OpenAPIInfo = {
@@ -22,36 +32,36 @@ export type GenerateOptions = {
   defaultResponses?: ResponseMap;
 };
 
+type HttpMethodKey =
+  | "delete"
+  | "get"
+  | "head"
+  | "options"
+  | "patch"
+  | "post"
+  | "put";
+
 /**
  * Generate an OpenAPI 3.1 document from a list of RouteDefs.
  *
  * Converts Next.js-style `[param]` path segments to OpenAPI `{param}` form.
- * Uses Zod's built-in `z.toJSONSchema()` for schema conversion (requires Zod 3.25+).
+ * Schemas annotated with `.meta({ id: 'Name' })` are extracted to
+ * `components/schemas` and referenced via `$ref` wherever they appear.
  */
 export function generateOpenAPI(
   routes: RouteDefMeta[],
   options: GenerateOptions,
-): Record<string, unknown> {
-  const paths: Record<string, Record<string, unknown>> = {};
+): ReturnType<typeof createDocument> {
+  const paths: ZodOpenApiPathsObject = {};
 
   for (const route of routes) {
     const openApiPath = normalizePath(route.path);
     paths[openApiPath] ??= {};
-
-    const operation: Record<string, unknown> = {
-      summary: route.summary,
-      description: route.description,
-      tags: route.tags ? [...route.tags] : undefined,
-      parameters: buildParameters(route),
-      requestBody: route.body ? buildRequestBody(route.body) : undefined,
-      responses: buildResponses(route.responses, options.defaultResponses),
-    };
-
-    // Strip undefined fields for a cleaner document
-    paths[openApiPath]![route.method.toLowerCase()] = stripUndefined(operation);
+    paths[openApiPath]![route.method.toLowerCase() as HttpMethodKey] =
+      buildOperation(route, options.defaultResponses);
   }
 
-  return stripUndefined({
+  return createDocument({
     openapi: "3.1.0",
     info: options.info,
     servers: options.servers,
@@ -60,97 +70,67 @@ export function generateOpenAPI(
 }
 
 function normalizePath(path: string): string {
-  // /users/[id]/posts/[postId] -> /users/{id}/posts/{postId}
   return path.replace(/\[(\.\.\.)?(\w+)\]/g, "{$2}");
 }
 
-function buildParameters(route: RouteDefMeta): unknown[] | undefined {
-  const parameters: unknown[] = [];
+function buildOperation(
+  route: RouteDefMeta,
+  defaultResponses?: ResponseMap,
+): ZodOpenApiOperationObject {
+  const operation: ZodOpenApiOperationObject = {
+    responses: buildResponses(route.responses, defaultResponses),
+  };
+  if (route.summary) operation.summary = route.summary;
+  if (route.description) operation.description = route.description;
+  if (route.tags) operation.tags = [...route.tags];
 
-  if (route.params) {
-    for (const param of extractObjectFields(route.params, "path")) {
-      parameters.push(param);
-    }
-  }
-  if (route.query) {
-    for (const param of extractObjectFields(route.query, "query")) {
-      parameters.push(param);
-    }
-  }
+  const requestParams = buildRequestParams(route);
+  if (requestParams) operation.requestParams = requestParams;
+  if (route.body) operation.requestBody = buildRequestBody(route.body);
 
-  return parameters.length > 0 ? parameters : undefined;
+  return operation;
 }
 
-function extractObjectFields(
-  schema: ZodType,
-  location: "path" | "query",
-): Array<Record<string, unknown>> {
-  const jsonSchema = zodToJsonSchema(schema);
-  if (
-    typeof jsonSchema !== "object" ||
-    jsonSchema === null ||
-    !("properties" in jsonSchema)
-  ) {
-    return [];
-  }
-
-  const properties =
-    (jsonSchema as { properties?: Record<string, unknown> }).properties ?? {};
-  const required = ((jsonSchema as { required?: string[] }).required ??
-    []) as string[];
-
-  return Object.entries(properties).map(([name, propSchema]) => ({
-    name,
-    in: location,
-    required: location === "path" ? true : required.includes(name),
-    schema: propSchema,
-  }));
+function buildRequestParams(
+  route: RouteDefMeta,
+): ZodOpenApiParameters | undefined {
+  const params: ZodOpenApiParameters = {};
+  // params/query are ZodObjects in practice; cast to the narrower ZodObjectInput
+  if (route.params) params.path = route.params as ZodObjectInput;
+  if (route.query) params.query = route.query as ZodObjectInput;
+  return Object.keys(params).length > 0 ? params : undefined;
 }
 
-function buildRequestBody(schema: ZodType): Record<string, unknown> {
+function buildRequestBody(schema: ZodType): ZodOpenApiRequestBodyObject {
   return {
     required: true,
-    content: {
-      "application/json": {
-        schema: zodToJsonSchema(schema),
-      },
-    },
+    content: { "application/json": { schema } },
   };
 }
 
 function buildResponses(
   responses: ResponseMap,
   defaults?: ResponseMap,
-): Record<string, unknown> {
+): ZodOpenApiResponsesObject {
   const merged: ResponseMap = { ...defaults, ...responses };
-  const out: Record<string, unknown> = {};
+  const out: ZodOpenApiResponsesObject = {};
 
   for (const [status, schema] of Object.entries(merged)) {
-    const jsonSchema = zodToJsonSchema(schema);
-    const isVoid = isVoidSchema(jsonSchema);
-
-    out[status] = isVoid
-      ? { description: descriptionForStatus(Number(status)) }
-      : {
-          description: descriptionForStatus(Number(status)),
-          content: {
-            "application/json": {
-              schema: jsonSchema,
-            },
-          },
-        };
+    const key = status as `${1 | 2 | 3 | 4 | 5}${string}`;
+    const response: ZodOpenApiResponseObject = {
+      description: descriptionForStatus(Number(status)),
+    };
+    if (!isVoidZodSchema(schema)) {
+      response.content = { "application/json": { schema } };
+    }
+    out[key] = response;
   }
 
   return out;
 }
 
-function isVoidSchema(jsonSchema: unknown): boolean {
-  if (typeof jsonSchema !== "object" || jsonSchema === null) return false;
-  const s = jsonSchema as { type?: unknown; not?: unknown };
-  // Zod's z.void() becomes either `{ not: {} }` or similar; be permissive
-  return (
-    s.type === "null" || (s.not !== undefined && Object.keys(s).length === 1)
-  );
+function isVoidZodSchema(schema: ZodType): boolean {
+  return schema instanceof ZodVoid || schema instanceof ZodNever;
 }
 
 function descriptionForStatus(status: number): string {
@@ -172,34 +152,6 @@ function descriptionForStatus(status: number): string {
 }
 
 /**
- * Convert a Zod schema to JSON Schema. Uses `z.toJSONSchema` if available
- * (Zod 3.25+); throws a helpful error if not.
- */
-function zodToJsonSchema(schema: ZodType): unknown {
-  const fn = (z as unknown as { toJSONSchema?: (s: ZodType) => unknown })
-    .toJSONSchema;
-  if (typeof fn !== "function") {
-    throw new Error(
-      "[zoutex] z.toJSONSchema is not available. Upgrade to Zod 3.25+ or install @zod/to-json-schema.",
-    );
-  }
-  return fn(schema);
-}
-
-function stripUndefined<T extends Record<string, unknown>>(obj: T): T {
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value === undefined) continue;
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      out[key] = stripUndefined(value as Record<string, unknown>);
-    } else {
-      out[key] = value;
-    }
-  }
-  return out as T;
-}
-
-/**
  * A registry that collects route definitions for later OpenAPI generation.
  * Useful when routes are spread across many files — import each route file
  * for its side effect, or push routes explicitly.
@@ -216,7 +168,7 @@ export class RouteRegistry {
     return this.routes;
   }
 
-  toOpenAPI(options: GenerateOptions): Record<string, unknown> {
+  toOpenAPI(options: GenerateOptions): ReturnType<typeof createDocument> {
     return generateOpenAPI(this.routes, options);
   }
 }

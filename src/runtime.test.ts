@@ -7,8 +7,10 @@ import { badRequest, defineRoute, notFound, ok } from "./index.js";
 import { toNextHandler } from "./next.js";
 import { RouteRegistry } from "./openapi.js";
 
-const UserSchema = z.object({ id: z.string(), name: z.string() });
-const ErrorSchema = z.object({ message: z.string() });
+const UserSchema = z
+  .object({ id: z.string(), name: z.string() })
+  .meta({ id: "User" });
+const ErrorSchema = z.object({ message: z.string() }).meta({ id: "Error" });
 
 // Define a couple of routes
 const getUserRoute = defineRoute({
@@ -34,6 +36,7 @@ const createUserRoute = defineRoute({
   summary: "Create a new user",
   tags: ["users"],
   body: z.object({ name: z.string().min(1) }),
+  query: z.object({ source: z.enum(["web", "mobile"]) }),
   responses: {
     201: UserSchema,
     400: ErrorSchema,
@@ -103,6 +106,30 @@ function testOpenAPI() {
     servers: [{ url: "https://api.example.com" }],
   });
 
+  const components = (spec.components as Record<string, unknown> | undefined)
+    ?.schemas as Record<string, unknown> | undefined;
+  console.assert(
+    components && "User" in components,
+    "Expected User in components/schemas",
+  );
+  console.assert(
+    components && "Error" in components,
+    "Expected Error in components/schemas",
+  );
+  const paths = spec.paths as Record<string, Record<string, unknown>>;
+  const get200 = (
+    (
+      (
+        (paths["/users/{id}"]?.get as Record<string, unknown>)
+          ?.responses as Record<string, unknown>
+      )?.["200"] as Record<string, unknown>
+    )?.content as Record<string, unknown>
+  )?.["application/json"] as Record<string, unknown>;
+  console.assert(
+    (get200?.schema as Record<string, unknown>)?.$ref ===
+      "#/components/schemas/User",
+    "Expected $ref to User",
+  );
   console.log(JSON.stringify(spec, null, 2));
 }
 

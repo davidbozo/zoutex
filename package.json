@@ -50,5 +50,8 @@
     "tsx": "^4.22.0",
     "typescript": "^5.4.0",
     "zod": "^4.4.3"
+  },
+  "dependencies": {
+    "zod-openapi": "^5.4.6"
   }
 }
