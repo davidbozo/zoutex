@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { describe, expect, it } from "vitest";
-import { defineRoute, notFound, ok } from "../define";
+import { badRequest, defineRoute, notFound, ok } from "../define";
 import { RouteRegistry } from "./index";
 
 const UserSchema = z
@@ -30,7 +30,11 @@ const createUserRoute = defineRoute({
   body: z.object({ name: z.string().min(1) }),
   responses: { 201: UserSchema, 400: ErrorSchema },
   async handler({ body }) {
-    return { status: 201 as const, body: { id: crypto.randomUUID(), name: body.name } };
+    if (body.name.length > 100) return badRequest({ message: "name too long" });
+    return {
+      status: 201 as const,
+      body: { id: crypto.randomUUID(), name: body.name },
+    };
   },
 });
 
