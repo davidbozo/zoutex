@@ -1,5 +1,8 @@
 # ZouteX
 
+[![CI](https://github.com/davidbozo/zoutex/actions/workflows/ci.yml/badge.svg)](https://github.com/davidbozo/zoutex/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/davidbozo/zoutex/graph/badge.svg)](https://codecov.io/gh/davidbozo/zoutex)
+
 > **⚠️ Work in progress.** ZouteX is under heavy development. APIs may change without notice and it is not yet suitable for production use.
 
 Type-safe routes for Next.js App Router, powered by **Zod**. Define once — get types, runtime validation, and OpenAPI from a single declaration.
