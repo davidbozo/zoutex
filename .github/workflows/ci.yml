@@ -39,7 +39,14 @@ jobs:
         run: npm -w apps/zoutex-playground run build
 
       - name: Run unit tests
-        run: npm test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
+        run: npm test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Run integration tests
         run: npm -w apps/zoutex-playground run test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
