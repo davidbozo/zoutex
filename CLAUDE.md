@@ -14,12 +14,11 @@ npm run typecheck   # tsc --noEmit (type-check only)
 npm run check       # Biome lint + format validation
 npm run fix         # Biome auto-fix (lint + format)
 npm run format      # Biome format only
-
-# Run runtime smoke tests (no test runner — executed directly)
-npx tsx src/runtime/runtime.test.ts
+npm test            # Run vitest (unit tests)
+npm run test:watch  # Vitest in watch mode
 ```
 
-Type-level tests (`src/define/types.test.ts`) are validated by `npm run typecheck` — they use `@ts-expect-error` comments to assert compile-time errors.
+Type-level tests (`src/define/types.test.ts`) are validated by `npm run typecheck` — they use `@ts-expect-error` comments to assert compile-time errors. Vitest is configured to exclude that file since it has no runtime assertions.
 
 ## Architecture
 
@@ -36,7 +35,7 @@ Three published entry points, each a separate bundle:
 - [src/openapi/](src/openapi/) — OpenAPI 3.1 spec generation (published as `/openapi`)
 - [src/cli/](src/cli/) — CLI tools (`zoutex discover`)
 
-New code belongs in the folder for its feature. Types stay co-located with their logic (`define/types.ts`), tests alongside their subject (`define/types.test.ts`, `runtime/runtime.test.ts`). Only `src/define/` and the two adapter folders have published entry points — `runtime/` is strictly internal.
+New code belongs in the folder for its feature. Types stay co-located with their logic (`define/types.ts`), tests alongside their subject (`next/adapter.test.ts`, `next/middleware.test.ts`, `openapi/openapi.test.ts`). Only `src/define/` and the two adapter folders have published entry points — `runtime/` is strictly internal.
 
 **Core flow:**
 1. `defineRoute<const TDef>(def)` in [src/define/define.ts](src/define/define.ts) captures a route definition with response types keyed by HTTP status code. The `const` modifier is essential — it preserves literal keys like `200 | 404` rather than widening to `number`.
