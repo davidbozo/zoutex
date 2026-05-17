@@ -35,9 +35,9 @@ import type {
  */
 export function defineRoute<
   const TResponses extends ResponseMap,
-  TParams extends ZodType = ZodType<unknown>,
-  TQuery extends ZodType = ZodType<unknown>,
-  TBody extends ZodType = ZodType<unknown>,
+  TParams extends ZodType = ZodType<undefined>,
+  TQuery extends ZodType = ZodType<undefined>,
+  TBody extends ZodType = ZodType<undefined>,
   TExtension = {},
 >(def: {
   method: HttpMethod;

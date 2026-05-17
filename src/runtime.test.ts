@@ -133,5 +133,36 @@ function testOpenAPI() {
   console.log(JSON.stringify(spec, null, 2));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Test undeclared schemas are undefined at runtime
+// ─────────────────────────────────────────────────────────────────────────────
+async function testUndeclaredSchemasAreUndefined() {
+  console.log("\n=== Undeclared schema defaults ===\n");
+
+  const captured: { params?: unknown; query?: unknown; body?: unknown } = {};
+
+  const route = defineRoute({
+    method: "GET",
+    path: "/ping",
+    responses: { 200: z.object({ ok: z.boolean() }) },
+    async handler(ctx) {
+      captured.params = ctx.params;
+      captured.query = ctx.query;
+      captured.body = ctx.body;
+      return ok({ ok: true });
+    },
+  });
+
+  const handler = toNextHandler(route);
+  const req = new Request("http://localhost/ping?foo=bar");
+  await handler(req, { params: { id: "42" } });
+
+  console.assert(captured.params === undefined, "params should be undefined when no schema declared");
+  console.assert(captured.query === undefined, "query should be undefined when no schema declared");
+  console.assert(captured.body === undefined, "body should be undefined when no schema declared");
+  console.log("params:", captured.params, "query:", captured.query, "body:", captured.body);
+}
+
 await testNextAdapter();
+await testUndeclaredSchemasAreUndefined();
 testOpenAPI();

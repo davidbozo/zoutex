@@ -124,3 +124,36 @@ defineRoute({
     return { status: 204 }; // no body required
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 8: Undeclared schemas — params, query, body are typed as undefined
+// ─────────────────────────────────────────────────────────────────────────────
+defineRoute({
+  method: "GET",
+  path: "/ping",
+  responses: { 200: z.object({ ok: z.boolean() }) },
+  handler({ params, query, body }) {
+    params satisfies undefined;
+    query satisfies undefined;
+    body satisfies undefined;
+    return { status: 200, body: { ok: true } };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 9: Accessing properties on undeclared schemas is a compile error
+// ─────────────────────────────────────────────────────────────────────────────
+defineRoute({
+  method: "GET",
+  path: "/ping",
+  responses: { 200: z.object({ ok: z.boolean() }) },
+  handler({ params, query, body }) {
+    // @ts-expect-error — params is undefined, no properties accessible
+    params.id;
+    // @ts-expect-error — query is undefined, no properties accessible
+    query.page;
+    // @ts-expect-error — body is undefined, no properties accessible
+    body.name;
+    return { status: 200, body: { ok: true } };
+  },
+});

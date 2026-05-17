@@ -21,13 +21,13 @@ export async function executeRoute(
   // 1. Parse and validate input
   const params = route.params
     ? safeParse(route.params, rawParams, "params")
-    : ({} as Record<string, unknown>);
+    : undefined;
 
   const url = new URL(req.url);
   const queryObj = Object.fromEntries(url.searchParams);
   const query = route.query
     ? safeParse(route.query, queryObj, "query")
-    : ({} as Record<string, unknown>);
+    : undefined;
 
   const body = route.body
     ? await parseBody(req, route.body)
