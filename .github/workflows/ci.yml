@@ -35,6 +35,9 @@ jobs:
       - name: Build Next.js app
         run: npm -w apps/zoutex-playground run build
 
+      - name: Run unit tests
+        run: npm test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
+
       - name: Run integration tests
         run: npm -w apps/zoutex-playground run test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
 
@@ -42,4 +45,6 @@ jobs:
         uses: mikepenz/action-junit-report@v4
         if: always()
         with:
-          report_paths: apps/zoutex-playground/test-results.xml
+          report_paths: |
+            test-results.xml
+            apps/zoutex-playground/test-results.xml
