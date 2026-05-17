@@ -149,8 +149,8 @@ defineRoute({
 defineRoute({
   method: "GET",
   path: "/users/{id}",
-  // @ts-expect-error — 404 is declared in responses but handler never returns it
   responses: {
+    // @ts-expect-error — 404 is declared in responses but handler never returns it
     200: UserSchema,
     404: ErrorSchema,
   },
@@ -186,7 +186,7 @@ defineRoute({
     return { currentUser: { id: "1" } };
   },
   // @ts-expect-error — middleware returns 401 but responses only declares 200
-  responses: { 200: UserSchema },
+  responses: { 200: UserSchema, 404: UserSchema },
   handler: async ({ currentUser }) => ok({ id: currentUser.id, name: "Alice" }),
 });
 

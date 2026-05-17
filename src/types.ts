@@ -1,5 +1,13 @@
 import type { ZodType, z } from "zod";
 
+/** Produces a compile-time error with a readable message. Assignments to this type always fail. */
+export type RouteDefError<Msg extends string> = {
+  readonly __error: never & Msg;
+};
+
+/** Merges an intersection of objects into a single flat object for cleaner error messages. */
+export type Flatten<T> = { [K in keyof T]: T[K] } & {};
+
 /**
  * A map from HTTP status codes to Zod schemas describing the response body.
  * Use `z.void()` for responses with no body (e.g. 204 No Content).
@@ -59,9 +67,9 @@ export type HandlerContext<TParams, TQuery, TBody, TExtension> = {
  * for each K declared in responses.
  */
 export type RouteDef<
-  TParams extends ZodType = ZodType<unknown>,
-  TQuery extends ZodType = ZodType<unknown>,
-  TBody extends ZodType = ZodType<unknown>,
+  TParams extends ZodType = ZodType<undefined>,
+  TQuery extends ZodType = ZodType<undefined>,
+  TBody extends ZodType = ZodType<undefined>,
   TResponses extends ResponseMap = ResponseMap,
   TMiddlewareReturn = {},
 > = {

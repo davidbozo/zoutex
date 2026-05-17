@@ -1,11 +1,13 @@
 import type { ZodType, z } from "zod";
 import type {
+  Flatten,
   HandlerContext,
   HttpMethod,
   Middleware,
   ResponseFor,
   ResponseMap,
   RouteDef,
+  RouteDefError,
 } from "./types";
 
 /**
@@ -49,30 +51,41 @@ export function defineRoute<
   params?: TParams;
   query?: TQuery;
   body?: TBody;
-  responses: [
-    | Exclude<
-        keyof TResponses,
-        (
-          | THandlerReturn
-          | Extract<TMiddlewareReturn, { status: number }>
-        )["status"]
-      >
-    | Exclude<
-        Extract<TMiddlewareReturn, { status: number }>["status"],
-        keyof TResponses
-      >,
-  ] extends [never]
-    ? TResponses
+  responses: Exclude<
+    Extract<TMiddlewareReturn, { status: number }>["status"],
+    keyof TResponses
+  > extends infer UndeclaredMiddlewareStatuses
+    ? [UndeclaredMiddlewareStatuses] extends [never]
+      ? Exclude<
+          keyof TResponses,
+          (
+            | THandlerReturn
+            | Extract<TMiddlewareReturn, { status: number }>
+          )["status"]
+        > extends infer UnimplementedStatuses
+        ? [UnimplementedStatuses] extends [never]
+          ? TResponses
+          : RouteDefError<`Responses declares status(es) never returned by handler or middleware: ${UnimplementedStatuses & number}`>
+        : never
+      : RouteDefError<`Middleware returns status(es) not declared in responses: ${UndeclaredMiddlewareStatuses & number}`>
     : never;
   middleware?: Middleware<{}, TMiddlewareReturn>;
   handler: (
-    ctx: HandlerContext<
-      z.infer<TParams>,
-      z.infer<TQuery>,
-      z.infer<TBody>,
-      Exclude<TMiddlewareReturn, { status: number }>
+    ctx: Flatten<
+      HandlerContext<
+        z.infer<TParams>,
+        z.infer<TQuery>,
+        z.infer<TBody>,
+        Exclude<TMiddlewareReturn, { status: number }>
+      >
     >,
   ) => Promise<THandlerReturn> | THandlerReturn;
 }): RouteDef<TParams, TQuery, TBody, TResponses, TMiddlewareReturn> {
-  return def as RouteDef<TParams, TQuery, TBody, TResponses, TMiddlewareReturn>;
+  return def as unknown as RouteDef<
+    TParams,
+    TQuery,
+    TBody,
+    TResponses,
+    TMiddlewareReturn
+  >;
 }
