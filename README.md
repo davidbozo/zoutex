@@ -110,27 +110,57 @@ These are typed such that using a helper for an undeclared status fails to compi
 
 ## Middleware
 
-Middleware extends the handler context with typed values:
+Middleware can do two things: **inject typed values** into the handler context, or **return early** with a typed response. Both are checked against `responses` at compile time.
+
+### Context injection
+
+Return a plain object and its fields become available in the handler:
 
 ```ts
-export const routeDefs = [
-  defineRoute({
-    method: "GET",
-    path: "/api/me",
-    middleware: async ({ req }) => {
-      const user = await verifyToken(req.headers.get("authorization"));
-      return { user }; // typed as { user: User }
-    },
-    responses: { 200: UserSchema, 401: ErrorSchema },
-    async handler({ user }) {
-      // `user` is fully typed here
-      return ok(user);
-    },
-  }),
-] as const;
-
-export const { GET } = toNextHandlers(routeDefs);
+defineRoute({
+  method: "GET",
+  path: "/api/me",
+  middleware: async ({ req }) => {
+    const user = await verifyToken(req.headers.get("authorization"));
+    return { user }; // typed as { user: User }
+  },
+  responses: { 200: UserSchema },
+  async handler({ user }) {
+    // `user` is fully typed here
+    return ok(user);
+  },
+});
 ```
+
+### Early return
+
+Return a `{ status, body }` object (or a result helper) to short-circuit the handler. The middleware's early-return statuses count toward the exhaustiveness check — the handler and middleware together must cover every status declared in `responses`:
+
+```ts
+import { unauthorized } from "zoutex";
+
+defineRoute({
+  method: "GET",
+  path: "/api/me",
+  middleware: async ({ req }) => {
+    const token = req.headers.get("authorization");
+    if (!token) return unauthorized({ message: "Unauthorized" }); // 401
+    return { user: await verifyToken(token) };
+  },
+  responses: {
+    200: UserSchema,
+    401: ErrorSchema, // covered by middleware — compile error if removed
+  },
+  async handler({ user }) {
+    return ok(user); // 200
+  },
+});
+```
+
+The same rules that apply to the handler apply to middleware:
+
+- Returning a status not in `responses` is a compile error.
+- Declaring a status in `responses` that neither the handler nor middleware can return is a compile error.
 
 ## OpenAPI generation
 

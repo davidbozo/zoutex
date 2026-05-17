@@ -24,10 +24,11 @@ defineRoute({
     400: ErrorSchema,
   },
   async handler({ params }) {
-    if (!params.id) return { status: 400, body: { message: "id required" } };
+    if (!params.id)
+      return { status: 400 as const, body: { message: "id required" } };
     if (params.id === "missing")
-      return { status: 404, body: { message: "not found" } };
-    return { status: 200, body: { id: params.id, name: "Alice" } };
+      return { status: 404 as const, body: { message: "not found" } };
+    return { status: 200 as const, body: { id: params.id, name: "Alice" } };
   },
 });
 
@@ -103,7 +104,9 @@ defineRoute({
   async handler({ query, body }) {
     const _source: "web" | "mobile" = query.source; // narrowed enum
     const _age: number = body.age; // inferred as number
-    return { status: 201, body: { id: "1", name: body.name } };
+    if (!body.name)
+      return { status: 400 as const, body: { message: "name required" } };
+    return { status: 201 as const, body: { id: "1", name: body.name } };
   },
 });
 
@@ -120,8 +123,8 @@ defineRoute({
   },
   async handler({ params }) {
     if (params.id === "missing")
-      return { status: 404, body: { message: "not found" } };
-    return { status: 204 }; // no body required
+      return { status: 404 as const, body: { message: "not found" } };
+    return { status: 204 as const }; // no body required
   },
 });
 
@@ -136,7 +139,77 @@ defineRoute({
     params satisfies undefined;
     query satisfies undefined;
     body satisfies undefined;
-    return { status: 200, body: { ok: true } };
+    return { status: 200 as const, body: { ok: true } };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 10: responses CANNOT declare a status the handler never returns
+// ─────────────────────────────────────────────────────────────────────────────
+defineRoute({
+  method: "GET",
+  path: "/users/{id}",
+  // @ts-expect-error — 404 is declared in responses but handler never returns it
+  responses: {
+    200: UserSchema,
+    404: ErrorSchema,
+  },
+  handler: async () => ok({ id: "1", name: "Alice" }),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 11: handler covering all declared statuses compiles cleanly
+// ─────────────────────────────────────────────────────────────────────────────
+defineRoute({
+  method: "GET",
+  path: "/users/{id}",
+  params: z.object({ id: z.string() }),
+  responses: {
+    200: UserSchema,
+    404: ErrorSchema,
+  },
+  async handler({ params }) {
+    if (params.id === "missing") return notFound({ message: "not found" });
+    return ok({ id: params.id, name: "Alice" });
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 12: Middleware returning an undeclared status is a compile error
+// ─────────────────────────────────────────────────────────────────────────────
+defineRoute({
+  method: "GET",
+  path: "/users/{id}",
+  middleware: async ({ req }) => {
+    if (!req.headers.get("authorization"))
+      return { status: 401 as const, body: { message: "Unauthorized" } };
+    return { currentUser: { id: "1" } };
+  },
+  // @ts-expect-error — middleware returns 401 but responses only declares 200
+  responses: { 200: UserSchema },
+  handler: async ({ currentUser }) => ok({ id: currentUser.id, name: "Alice" }),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 13: Middleware covering some statuses + handler covering the rest compiles
+// ─────────────────────────────────────────────────────────────────────────────
+defineRoute({
+  method: "GET",
+  path: "/users/{id}",
+  params: z.object({ id: z.string() }),
+  middleware: async ({ req }) => {
+    const token = req.headers.get("authorization");
+    if (!token)
+      return { status: 401 as const, body: { message: "Unauthorized" } };
+    return { currentUser: { id: "1", name: "Alice" } };
+  },
+  responses: {
+    200: UserSchema,
+    401: ErrorSchema,
+  },
+  async handler({ params, currentUser }) {
+    const _id: string = currentUser.id;
+    return ok({ id: params.id, name: _id });
   },
 });
 
@@ -154,6 +227,6 @@ defineRoute({
     query.page;
     // @ts-expect-error — body is undefined, no properties accessible
     body.name;
-    return { status: 200, body: { ok: true } };
+    return { status: 200 as const, body: { ok: true } };
   },
 });

@@ -27,8 +27,8 @@ import type {
  *   },
  *   async handler({ params }) {
  *     const user = await db.users.find(params.id);
- *     if (!user) return { status: 404, body: { message: "not found" } };
- *     return { status: 200, body: user };
+ *     if (!user) return { status: 404 as const, body: { message: "not found" } };
+ *     return { status: 200 as const, body: user };
  *   },
  * });
  * ```
@@ -38,7 +38,8 @@ export function defineRoute<
   TParams extends ZodType = ZodType<undefined>,
   TQuery extends ZodType = ZodType<undefined>,
   TBody extends ZodType = ZodType<undefined>,
-  TExtension = {},
+  TMiddlewareReturn = {},
+  THandlerReturn extends ResponseFor<TResponses> = ResponseFor<TResponses>,
 >(def: {
   method: HttpMethod;
   path: string;
@@ -48,16 +49,30 @@ export function defineRoute<
   params?: TParams;
   query?: TQuery;
   body?: TBody;
-  responses: TResponses;
-  middleware?: Middleware<{}, TExtension>;
+  responses: [
+    | Exclude<
+        keyof TResponses,
+        (
+          | THandlerReturn
+          | Extract<TMiddlewareReturn, { status: number }>
+        )["status"]
+      >
+    | Exclude<
+        Extract<TMiddlewareReturn, { status: number }>["status"],
+        keyof TResponses
+      >,
+  ] extends [never]
+    ? TResponses
+    : never;
+  middleware?: Middleware<{}, TMiddlewareReturn>;
   handler: (
     ctx: HandlerContext<
       z.infer<TParams>,
       z.infer<TQuery>,
       z.infer<TBody>,
-      TExtension
+      Exclude<TMiddlewareReturn, { status: number }>
     >,
-  ) => Promise<ResponseFor<TResponses>> | ResponseFor<TResponses>;
-}): RouteDef<TParams, TQuery, TBody, TResponses, TExtension> {
-  return def as RouteDef<TParams, TQuery, TBody, TResponses, TExtension>;
+  ) => Promise<THandlerReturn> | THandlerReturn;
+}): RouteDef<TParams, TQuery, TBody, TResponses, TMiddlewareReturn> {
+  return def as RouteDef<TParams, TQuery, TBody, TResponses, TMiddlewareReturn>;
 }

@@ -30,14 +30,16 @@ export type HttpMethod =
   | "HEAD";
 
 /**
- * Context passed to a middleware function. Returns a context extension
- * that will be merged into the handler's `ctx`.
+ * A middleware function. `TReturn` is the full union of what the middleware
+ * may return: either a plain injection object (merged into handler context)
+ * or a `{ status, body }` response object (short-circuits the handler).
+ * The runtime discriminates by checking for a numeric `status` field.
  */
-export type Middleware<TContext = {}, TExtension = {}> = (
+export type Middleware<TContext = {}, TReturn = {}> = (
   ctx: {
     req: Request;
   } & TContext,
-) => Promise<TExtension> | TExtension;
+) => Promise<TReturn> | TReturn;
 
 /**
  * The context object passed to a route handler.
@@ -61,7 +63,7 @@ export type RouteDef<
   TQuery extends ZodType = ZodType<unknown>,
   TBody extends ZodType = ZodType<unknown>,
   TResponses extends ResponseMap = ResponseMap,
-  TExtension = {},
+  TMiddlewareReturn = {},
 > = {
   method: HttpMethod;
   /** OpenAPI-style path (e.g. "/users/{id}"). Next.js bracket form also accepted. */
@@ -73,13 +75,13 @@ export type RouteDef<
   query?: TQuery;
   body?: TBody;
   responses: TResponses;
-  middleware?: Middleware<{}, TExtension>;
+  middleware?: Middleware<{}, TMiddlewareReturn>;
   handler: (
     ctx: HandlerContext<
       z.infer<TParams>,
       z.infer<TQuery>,
       z.infer<TBody>,
-      TExtension
+      Exclude<TMiddlewareReturn, { status: number }>
     >,
   ) => Promise<ResponseFor<TResponses>> | ResponseFor<TResponses>;
 };

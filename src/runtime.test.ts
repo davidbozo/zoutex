@@ -43,7 +43,10 @@ const createUserRoute = defineRoute({
   },
   async handler({ body }) {
     if (body.name.length > 100) return badRequest({ message: "name too long" });
-    return { status: 201, body: { id: crypto.randomUUID(), name: body.name } };
+    return {
+      status: 201 as const,
+      body: { id: crypto.randomUUID(), name: body.name },
+    };
   },
 });
 
@@ -157,12 +160,79 @@ async function testUndeclaredSchemasAreUndefined() {
   const req = new Request("http://localhost/ping?foo=bar");
   await handler(req, { params: { id: "42" } });
 
-  console.assert(captured.params === undefined, "params should be undefined when no schema declared");
-  console.assert(captured.query === undefined, "query should be undefined when no schema declared");
-  console.assert(captured.body === undefined, "body should be undefined when no schema declared");
-  console.log("params:", captured.params, "query:", captured.query, "body:", captured.body);
+  console.assert(
+    captured.params === undefined,
+    "params should be undefined when no schema declared",
+  );
+  console.assert(
+    captured.query === undefined,
+    "query should be undefined when no schema declared",
+  );
+  console.assert(
+    captured.body === undefined,
+    "body should be undefined when no schema declared",
+  );
+  console.log(
+    "params:",
+    captured.params,
+    "query:",
+    captured.query,
+    "body:",
+    captured.body,
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test middleware early return
+// ─────────────────────────────────────────────────────────────────────────────
+async function testMiddlewareEarlyReturn() {
+  console.log("\n=== Middleware early return ===\n");
+
+  const route = defineRoute({
+    method: "GET",
+    path: "/protected",
+    responses: { 200: UserSchema, 401: ErrorSchema },
+    middleware: async ({ req }) => {
+      const token = req.headers.get("authorization");
+      if (token !== "Bearer secret")
+        return { status: 401 as const, body: { message: "Unauthorized" } };
+      return { currentUser: { id: "1", name: "Alice" } };
+    },
+    async handler({ currentUser }) {
+      return ok({ id: currentUser.id, name: currentUser.name });
+    },
+  });
+
+  const handler = toNextHandler(route);
+
+  const authedRes = await handler(
+    new Request("http://localhost/protected", {
+      headers: { authorization: "Bearer secret" },
+    }),
+    { params: {} },
+  );
+  const authedBody = await authedRes.json();
+  console.log(`authed  →  ${authedRes.status}`, authedBody);
+  console.assert(authedRes.status === 200, "Expected 200 for valid token");
+  console.assert(authedBody.id === "1", "Expected id '1' in authed response");
+  console.assert(
+    authedBody.name === "Alice",
+    "Expected name 'Alice' in authed response",
+  );
+
+  const unauthRes = await handler(new Request("http://localhost/protected"), {
+    params: {},
+  });
+  const unauthBody = await unauthRes.json();
+  console.log(`unauthed  →  ${unauthRes.status}`, unauthBody);
+  console.assert(unauthRes.status === 401, "Expected 401 for missing token");
+  console.assert(
+    unauthBody.message === "Unauthorized",
+    "Expected 'Unauthorized' message in 401 response",
+  );
 }
 
 await testNextAdapter();
 await testUndeclaredSchemasAreUndefined();
+await testMiddlewareEarlyReturn();
 testOpenAPI();

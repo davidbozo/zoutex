@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 import { ResponseShapeError, ValidationError, ZouteXError } from "./errors";
-import type { AnyRouteDef } from "./types";
+import type { AnyRouteDef, ResponseMap } from "./types";
 
 /**
  * Framework-agnostic route execution pipeline.
@@ -33,8 +33,28 @@ export async function executeRoute(
     ? await parseBody(req, route.body)
     : (undefined as unknown);
 
-  // 2. Run middleware to build context extension
-  const extension = route.middleware ? await route.middleware({ req }) : {};
+  // 2. Run middleware — may inject context or return an early response
+  let extension: Record<string, unknown> = {};
+  if (route.middleware) {
+    const middlewareResult = await route.middleware({ req });
+    if (
+      middlewareResult !== null &&
+      typeof middlewareResult === "object" &&
+      "status" in middlewareResult &&
+      typeof (middlewareResult as { status: unknown }).status === "number"
+    ) {
+      return buildResponse(
+        middlewareResult as {
+          status: number;
+          body?: unknown;
+          headers?: Record<string, string>;
+        },
+        shouldValidateResponse,
+        route.responses,
+      );
+    }
+    extension = middlewareResult as Record<string, unknown>;
+  }
 
   // 3. Invoke the user's handler
   const result = await route.handler({
@@ -45,31 +65,8 @@ export async function executeRoute(
     ...extension,
   } as Parameters<typeof route.handler>[0]);
 
-  // 4. Optionally validate the response shape against the declared schema
-  if (shouldValidateResponse) {
-    const responseSchema = route.responses[result.status as unknown as number];
-    if (responseSchema && result.body !== undefined) {
-      const parsed = responseSchema.safeParse(result.body);
-      if (!parsed.success) {
-        throw new ResponseShapeError(
-          result.status as unknown as number,
-          parsed.error.issues,
-        );
-      }
-    }
-  }
-
-  // 5. Build the Response
-  const headers = new Headers(result.headers);
-  const status = result.status as unknown as number;
-
-  // No-body statuses
-  if (result.body === undefined || status === 204 || status === 304) {
-    return new Response(null, { status, headers });
-  }
-
-  headers.set("content-type", "application/json");
-  return new Response(JSON.stringify(result.body), { status, headers });
+  // 4. Build and return the response
+  return buildResponse(result, shouldValidateResponse, route.responses);
 }
 
 export function defaultErrorHandler(error: unknown): Response {
@@ -91,6 +88,32 @@ export function defaultErrorHandler(error: unknown): Response {
     status: 500,
     headers: { "content-type": "application/json" },
   });
+}
+
+function buildResponse(
+  result: { status: number; body?: unknown; headers?: Record<string, string> },
+  shouldValidateResponse: boolean,
+  responses: ResponseMap,
+): Response {
+  if (shouldValidateResponse) {
+    const responseSchema = responses[result.status];
+    if (responseSchema && result.body !== undefined) {
+      const parsed = responseSchema.safeParse(result.body);
+      if (!parsed.success) {
+        throw new ResponseShapeError(result.status, parsed.error.issues);
+      }
+    }
+  }
+
+  const headers = new Headers(result.headers);
+  const { status } = result;
+
+  if (result.body === undefined || status === 204 || status === 304) {
+    return new Response(null, { status, headers });
+  }
+
+  headers.set("content-type", "application/json");
+  return new Response(JSON.stringify(result.body), { status, headers });
 }
 
 function safeParse(
