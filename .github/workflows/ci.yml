@@ -48,8 +48,24 @@ jobs:
           flags: unit
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Upload unit test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: always()
+        with:
+          files: ./test-results.xml
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Run integration tests
         run: npm -w apps/zoutex-playground run test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
+
+      - name: Upload integration test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: always()
+        with:
+          files: ./apps/zoutex-playground/test-results.xml
+          flags: integration
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Publish unit test results
         uses: mikepenz/action-junit-report@v4
