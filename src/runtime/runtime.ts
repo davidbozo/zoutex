@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
-import { ResponseShapeError, ValidationError, ZouteXError } from "./errors";
-import type { AnyRouteDef, ResponseMap } from "./types";
+import { ResponseShapeError, ValidationError, ZouteXError } from "../define/errors";
+import type { AnyRouteDef, ResponseMap } from "../define/types";
 
 /**
  * Framework-agnostic route execution pipeline.

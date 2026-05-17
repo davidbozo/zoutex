@@ -2,7 +2,11 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig([
   {
-    entry: ["src/index.ts", "src/next.ts", "src/openapi.ts"],
+    entry: {
+      index: "src/define/index.ts",
+      next: "src/next/index.ts",
+      openapi: "src/openapi/index.ts",
+    },
     format: ["esm"],
   },
   {

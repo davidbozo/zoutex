@@ -16,31 +16,40 @@ npm run fix         # Biome auto-fix (lint + format)
 npm run format      # Biome format only
 
 # Run runtime smoke tests (no test runner — executed directly)
-npx tsx src/runtime.test.ts
+npx tsx src/runtime/runtime.test.ts
 ```
 
-Type-level tests (`src/types.test.ts`) are validated by `npm run typecheck` — they use `@ts-expect-error` comments to assert compile-time errors.
+Type-level tests (`src/define/types.test.ts`) are validated by `npm run typecheck` — they use `@ts-expect-error` comments to assert compile-time errors.
 
 ## Architecture
 
 Three published entry points, each a separate bundle:
 
-- `.` (`src/index.ts`) — `defineRoute`, result helpers (`ok`, `notFound`, etc.), types, errors
-- `/next` (`src/next.ts`) — `toNextHandler` / `toNextHandlers` adapter for Next.js App Router
-- `/openapi` (`src/openapi.ts`) — `generateOpenAPI`, `RouteRegistry` for OpenAPI 3.1 spec generation
+- `.` (`src/define/index.ts`) — `defineRoute`, result helpers (`ok`, `notFound`, etc.), types, errors
+- `/next` (`src/next/index.ts`) — `toNextHandler` / `toNextHandlers` adapter for Next.js App Router
+- `/openapi` (`src/openapi/index.ts`) — `generateOpenAPI`, `RouteRegistry` for OpenAPI 3.1 spec generation
+
+**Folder structure** (each feature owns its logic, types, and tests):
+- [src/define/](src/define/) — route definition, types, errors, result helpers (published as `.`)
+- [src/next/](src/next/) — Next.js App Router adapter (published as `/next`)
+- [src/runtime/](src/runtime/) — framework-agnostic execution pipeline; internal, only imported by `next/`
+- [src/openapi/](src/openapi/) — OpenAPI 3.1 spec generation (published as `/openapi`)
+- [src/cli/](src/cli/) — CLI tools (`zoutex discover`)
+
+New code belongs in the folder for its feature. Types stay co-located with their logic (`define/types.ts`), tests alongside their subject (`define/types.test.ts`, `runtime/runtime.test.ts`). Only `src/define/` and the two adapter folders have published entry points — `runtime/` is strictly internal.
 
 **Core flow:**
-1. `defineRoute<const TDef>(def)` in [src/define.ts](src/define.ts) captures a route definition with response types keyed by HTTP status code. The `const` modifier is essential — it preserves literal keys like `200 | 404` rather than widening to `number`.
-2. `toNextHandler(route)` in [src/next.ts](src/next.ts) wraps the handler, validates request/response with Zod schemas, and maps results to `NextResponse`. Handles both Next.js 14 (params as object) and 15+ (params as Promise).
-3. `RouteRegistry` in [src/openapi.ts](src/openapi.ts) collects registered routes and `generateOpenAPI()` produces an OpenAPI 3.1 document via `zod-openapi`.
+1. `defineRoute<const TDef>(def)` in [src/define/define.ts](src/define/define.ts) captures a route definition with response types keyed by HTTP status code. The `const` modifier is essential — it preserves literal keys like `200 | 404` rather than widening to `number`.
+2. `toNextHandler(route)` in [src/next/index.ts](src/next/index.ts) wraps the handler and delegates to `executeRoute` in [src/runtime/runtime.ts](src/runtime/runtime.ts), which validates request/response with Zod schemas. Handles both Next.js 14 (params as object) and 15+ (params as Promise).
+3. `RouteRegistry` in [src/openapi/index.ts](src/openapi/index.ts) collects registered routes and `generateOpenAPI()` produces an OpenAPI 3.1 document via `zod-openapi`.
 
-**Key types** ([src/types.ts](src/types.ts)):
+**Key types** ([src/define/types.ts](src/define/types.ts)):
 - `RouteDef` — the shape of a route definition (method, path, schemas, handler, middleware)
 - `ResponseMap` — maps status codes to Zod schemas
 - `HandlerContext` — what the handler receives (parsed body, params, query, headers, middleware output)
-- `RouteResult<TDef>` — the union of valid return values constrained by the route's `ResponseMap`
+- `ResponseFor<TResponses>` — the discriminated union of valid `{ status, body }` return values a handler may return
 
-**Result helpers** ([src/result.ts](src/result.ts)) return typed `RouteResult` objects (e.g. `ok(data)` → `{ status: 200, body: data }`).
+**Result helpers** ([src/define/result.ts](src/define/result.ts)) return typed `RouteResult` objects (e.g. `ok(data)` → `{ status: 200, body: data }`).
 
 ## Type correctness
 

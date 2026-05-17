@@ -1,5 +1,5 @@
-import { defaultErrorHandler, executeRoute } from "./runtime";
-import type { AnyRouteDef } from "./types";
+import { defaultErrorHandler, executeRoute } from "../runtime/runtime";
+import type { AnyRouteDef } from "../define/types";
 
 export type NextRouteContext = {
   /** In Next.js 15+, params is a Promise. Older versions pass an object. We accept both. */

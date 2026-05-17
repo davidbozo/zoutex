@@ -9,7 +9,7 @@ import {
   type ZodOpenApiResponseObject,
   type ZodOpenApiResponsesObject,
 } from "zod-openapi";
-import type { ResponseMap, RouteDefMeta } from "./types";
+import type { ResponseMap, RouteDefMeta } from "../define/types";
 
 export type OpenAPIInfo = {
   title: string;

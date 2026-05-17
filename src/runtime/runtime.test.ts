@@ -1,11 +1,11 @@
 /**
  * Runtime smoke test - exercises the Next.js adapter and OpenAPI generator
- * against a small set of routes. Run with `npx tsx src/runtime.test.ts`.
+ * against a small set of routes. Run with `npx tsx src/runtime/runtime.test.ts`.
  */
 import { z } from "zod";
-import { badRequest, defineRoute, notFound, ok } from "./index";
-import { toNextHandler } from "./next";
-import { RouteRegistry } from "./openapi";
+import { badRequest, defineRoute, notFound, ok } from "../define";
+import { toNextHandler } from "../next";
+import { RouteRegistry } from "../openapi";
 
 const UserSchema = z
   .object({ id: z.string(), name: z.string() })
