@@ -38,9 +38,10 @@ describe("GET /api/openapi.json", () => {
   it("uses $ref for named schemas in responses", async () => {
     const res = await fetch(`${BASE}/api/openapi.json`);
     const spec = await res.json();
-    const get200 = spec.paths["/api/users/{id}"]?.get?.responses?.["200"]?.content?.[
-      "application/json"
-    ]?.schema;
+    const get200 =
+      spec.paths["/api/users/{id}"]?.get?.responses?.["200"]?.content?.[
+        "application/json"
+      ]?.schema;
     expect(get200?.$ref).toBe("#/components/schemas/User");
   });
 

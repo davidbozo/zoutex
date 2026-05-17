@@ -1,5 +1,9 @@
 import { ZodError } from "zod";
-import { ResponseShapeError, ValidationError, ZouteXError } from "../define/errors";
+import {
+  ResponseShapeError,
+  ValidationError,
+  ZouteXError,
+} from "../define/errors";
 import type { AnyRouteDef, ResponseMap } from "../define/types";
 
 /**

@@ -40,7 +40,9 @@ export async function setup() {
 export async function teardown() {
   if (!server) return;
   if (isWindows && server.pid) {
-    spawn("taskkill", ["/pid", String(server.pid), "/T", "/F"], { shell: false });
+    spawn("taskkill", ["/pid", String(server.pid), "/T", "/F"], {
+      shell: false,
+    });
   } else {
     server.kill("SIGTERM");
   }

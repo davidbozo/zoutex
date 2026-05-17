@@ -8,4 +8,6 @@ export const PostSchema = z
   .object({ id: z.string().uuid(), title: z.string(), content: z.string() })
   .meta({ id: "Post" });
 
-export const ErrorSchema = z.object({ message: z.string() }).meta({ id: "Error" });
+export const ErrorSchema = z
+  .object({ message: z.string() })
+  .meta({ id: "Error" });

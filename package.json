@@ -13,7 +13,9 @@
   ],
   "license": "MIT",
   "type": "module",
-  "bin": { "zoutex": "dist/cli.mjs" },
+  "bin": {
+    "zoutex": "dist/cli.mjs"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
@@ -32,7 +34,9 @@
     "dist",
     "README.md"
   ],
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",

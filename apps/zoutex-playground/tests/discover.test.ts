@@ -13,7 +13,12 @@ type CliResult = { stdout: string; exitCode: number };
 
 async function runCli(root: string): Promise<CliResult> {
   try {
-    const { stdout } = await execFileAsync("node", [CLI, "discover", "--root", root]);
+    const { stdout } = await execFileAsync("node", [
+      CLI,
+      "discover",
+      "--root",
+      root,
+    ]);
     return { stdout, exitCode: 0 };
   } catch (err: unknown) {
     const e = err as { stdout: string; code: number };
@@ -24,9 +29,13 @@ async function runCli(root: string): Promise<CliResult> {
 // shell: true is required on Windows where npm link creates a .cmd shim
 async function runCliByName(root: string): Promise<CliResult> {
   try {
-    const { stdout } = await execFileAsync("zoutex", ["discover", "--root", root], {
-      shell: true,
-    });
+    const { stdout } = await execFileAsync(
+      "zoutex",
+      ["discover", "--root", root],
+      {
+        shell: true,
+      },
+    );
     return { stdout, exitCode: 0 };
   } catch (err: unknown) {
     const e = err as { stdout: string; code: number };

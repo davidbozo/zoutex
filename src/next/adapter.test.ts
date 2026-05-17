@@ -25,7 +25,10 @@ const createUserRoute = defineRoute({
   responses: { 201: UserSchema, 400: ErrorSchema },
   async handler({ body }) {
     if (body.name.length > 100) return badRequest({ message: "name too long" });
-    return { status: 201 as const, body: { id: crypto.randomUUID(), name: body.name } };
+    return {
+      status: 201 as const,
+      body: { id: crypto.randomUUID(), name: body.name },
+    };
   },
 });
 
@@ -94,10 +97,9 @@ describe("undeclared schemas", () => {
       },
     });
 
-    await toNextHandler(route)(
-      new Request("http://localhost/ping?foo=bar"),
-      { params: { id: "42" } },
-    );
+    await toNextHandler(route)(new Request("http://localhost/ping?foo=bar"), {
+      params: { id: "42" },
+    });
 
     expect(captured.params).toBeUndefined();
     expect(captured.query).toBeUndefined();

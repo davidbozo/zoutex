@@ -23,7 +23,9 @@ describe("GET /api/users", () => {
     const res = await fetch(`${BASE}/api/users?search=SearchableUser`);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.every((u: { name: string }) => u.name.includes("SearchableUser"))).toBe(true);
+    expect(
+      body.every((u: { name: string }) => u.name.includes("SearchableUser")),
+    ).toBe(true);
   });
 });
 
@@ -87,7 +89,10 @@ describe("PUT /api/users/:id", () => {
   let userId: string;
 
   beforeAll(async () => {
-    const res = await createUser("Update Me", `update-${Date.now()}@example.com`);
+    const res = await createUser(
+      "Update Me",
+      `update-${Date.now()}@example.com`,
+    );
     userId = (await res.json()).id;
   });
 
@@ -113,7 +118,10 @@ describe("PUT /api/users/:id", () => {
 
 describe("DELETE /api/users/:id", () => {
   it("deletes the user and returns 204 with no body", async () => {
-    const createRes = await createUser("Delete Me", `delete-${Date.now()}@example.com`);
+    const createRes = await createUser(
+      "Delete Me",
+      `delete-${Date.now()}@example.com`,
+    );
     const { id } = await createRes.json();
 
     const delRes = await fetch(`${BASE}/api/users/${id}`, { method: "DELETE" });
@@ -125,7 +133,9 @@ describe("DELETE /api/users/:id", () => {
   });
 
   it("returns 404 for unknown id", async () => {
-    const res = await fetch(`${BASE}/api/users/does-not-exist`, { method: "DELETE" });
+    const res = await fetch(`${BASE}/api/users/does-not-exist`, {
+      method: "DELETE",
+    });
     expect(res.status).toBe(404);
   });
 });

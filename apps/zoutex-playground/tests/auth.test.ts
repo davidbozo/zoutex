@@ -22,6 +22,10 @@ describe("GET /api/auth/me", () => {
     });
     expect(res.status).toBe(200);
     const user = await res.json();
-    expect(user).toMatchObject({ id: "user-1", name: "Alice", email: "alice@example.com" });
+    expect(user).toMatchObject({
+      id: "user-1",
+      name: "Alice",
+      email: "alice@example.com",
+    });
   });
 });
