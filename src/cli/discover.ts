@@ -4,7 +4,7 @@ import { defineCommand } from "citty";
 import pc from "picocolors";
 import {
   analyzeRouteContent,
-  buildUrlPath,
+  deriveUrlPath,
   printSummary,
   type RouteInfo,
 } from "./discover.utils.js";
@@ -81,6 +81,6 @@ async function analyzeRouteFile(
   appDir: string,
 ): Promise<RouteInfo> {
   const content = await readFile(filePath, "utf-8");
-  const urlPath = buildUrlPath(relative(appDir, filePath));
+  const urlPath = deriveUrlPath(filePath, appDir);
   return analyzeRouteContent(content, filePath, urlPath);
 }

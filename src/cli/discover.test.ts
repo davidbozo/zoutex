@@ -86,6 +86,40 @@ describe("buildUrlPath", () => {
       expect(buildUrlPath("a/b\\c/route.tsx")).toBe("/a/b/c");
     });
   });
+
+  describe("route groups (group) — segment stripped from URL", () => {
+    it("single group at root", () => {
+      expect(buildUrlPath("(auth)/login/route.ts")).toBe("/login");
+    });
+    it("group wrapping a dynamic segment", () => {
+      expect(buildUrlPath("(shop)/users/[id]/route.ts")).toBe("/users/[id]");
+    });
+    it("nested groups both stripped, becomes root", () => {
+      expect(buildUrlPath("(marketing)/(shop)/route.ts")).toBe("/");
+    });
+    it("group mid-path", () => {
+      expect(buildUrlPath("api/(v1)/users/route.ts")).toBe("/api/users");
+    });
+    it("Windows backslash with group", () => {
+      expect(buildUrlPath("(auth)\\login\\route.ts")).toBe("/login");
+    });
+  });
+
+  describe("optional catch-all [[...slug]]", () => {
+    it("POSIX path", () => {
+      expect(buildUrlPath("blog/[[...slug]]/route.ts")).toBe(
+        "/blog/[[...slug]]",
+      );
+    });
+    it("Windows backslash path", () => {
+      expect(buildUrlPath("blog\\[[...slug]]\\route.ts")).toBe(
+        "/blog/[[...slug]]",
+      );
+    });
+    it("optional catch-all at root", () => {
+      expect(buildUrlPath("[[...slug]]/route.ts")).toBe("/[[...slug]]");
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

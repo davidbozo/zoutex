@@ -15,7 +15,10 @@ export function buildUrlPath(relPath: string): string {
   const withoutFile = relPath
     .replace(/route\.tsx?$/, "")
     .replace(/[/\\]+$/, "");
-  const posixPath = withoutFile.split(/[/\\]/).join("/");
+  const posixPath = withoutFile
+    .split(/[/\\]/)
+    .filter((seg) => seg && !/^\(.*\)$/.test(seg))
+    .join("/");
   return posixPath ? `/${posixPath}` : "/";
 }
 
