@@ -228,7 +228,7 @@ toNextHandler(route, {
 
 ## Development
 
-The repo contains an integration testing playground at `apps/zoutex-playground` — a real Next.js app that exercises every library feature against a live server.
+The repo contains an e2e testing playground at `apps/zoutex-playground` — a real Next.js app that exercises every library feature against a live server.
 
 **First-time setup:**
 
@@ -238,7 +238,7 @@ npm run build                                    # compile library → dist/
 npm -w apps/zoutex-playground run build          # Next.js production build (required before tests)
 ```
 
-**Run integration tests:**
+**Run e2e tests:**
 
 ```sh
 npm -w apps/zoutex-playground run test
@@ -249,7 +249,7 @@ Vitest starts a `next start` server on port 4321, waits for it to be ready, runs
 **Convenience scripts (build library + run tests in one command):**
 
 ```sh
-npm run test:integration    # npm run build && npm -w apps/zoutex-playground run test
+npm run test:e2e    # npm run build && npm -w apps/zoutex-playground run test
 npm run playground          # npm run build && npm -w apps/zoutex-playground run dev
 ```
 

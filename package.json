@@ -47,7 +47,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "playground": "npm run build && npm -w apps/zoutex-playground run dev",
-    "test:integration": "npm run build && npm -w apps/zoutex-playground run test"
+    "test:e2e": "npm run build && npm -w apps/zoutex-playground run test"
   },
   "peerDependencies": {
     "next": ">=14",

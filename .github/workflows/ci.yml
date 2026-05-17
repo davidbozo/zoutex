@@ -49,22 +49,24 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload unit test results to Codecov
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./test-results.xml
           flags: unit
+          report_type: test_results
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Run integration tests
+      - name: Run e2e tests
         run: npm -w apps/zoutex-playground run test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
 
-      - name: Upload integration test results to Codecov
-        uses: codecov/test-results-action@v1
+      - name: Upload e2e test results to Codecov
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./apps/zoutex-playground/test-results.xml
-          flags: integration
+          flags: e2e
+          report_type: test_results
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Publish unit test results
@@ -74,9 +76,9 @@ jobs:
           check_name: Unit Test Report
           report_paths: test-results.xml
 
-      - name: Publish integration test results
+      - name: Publish e2e test results
         uses: mikepenz/action-junit-report@v4
         if: always()
         with:
-          check_name: Integration Test Report
+          check_name: E2E Test Report
           report_paths: apps/zoutex-playground/test-results.xml
