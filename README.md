@@ -83,6 +83,14 @@ defineRoute({
 });
 ```
 
+## The input contract
+
+ZouteX enforces the same rule on inputs. If you don't declare a schema for `params`, `query`, or `body`, those fields are typed `undefined` in the handler — and accessing them is a compile error.
+
+This is intentional. A query parameter you read without a schema is invisible to the OpenAPI spec. ZouteX won't let you build a gap between what your handler reads and what your API declares.
+
+Declare the schema, get the type. Don't declare it, don't access it.
+
 ## Result helpers
 
 Optional sugar for common statuses:

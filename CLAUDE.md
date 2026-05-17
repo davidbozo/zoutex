@@ -42,6 +42,15 @@ Three published entry points, each a separate bundle:
 
 **Result helpers** ([src/result.ts](src/result.ts)) return typed `RouteResult` objects (e.g. `ok(data)` → `{ status: 200, body: data }`).
 
+## Type correctness
+
+Type safety is the core value proposition of this library. Treat it as a hard constraint, not a best-effort goal.
+
+- **Never use `unknown` or `any` in public-facing types.** If the actual shape is knowable — from what the runtime produces, from what Zod infers, from what the framework guarantees — use that shape. `unknown` is only appropriate at true system boundaries where the shape genuinely cannot be determined.
+- **Default generics must match runtime behavior exactly.** If a generic defaults to a type, that type must be what the handler actually receives at runtime. A mismatch between the default type and the runtime value is a bug, not a simplification.
+- **The input contract:** handlers only receive typed values for schemas they explicitly declare. Undeclared `params`, `query`, and `body` are typed `undefined` — and the runtime returns `undefined` for them too. This keeps the type system and the OpenAPI spec in sync: if it's not declared, it doesn't exist.
+- **Prefer `satisfies` over type assertions** (`as`) when writing type-level tests. Assertions hide bugs; `satisfies` surfaces them.
+
 ## Tooling Notes
 
 - **Biome** replaces ESLint + Prettier. Config in [biome.json](biome.json).
